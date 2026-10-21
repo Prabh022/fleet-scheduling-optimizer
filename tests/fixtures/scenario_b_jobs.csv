@@ -1,0 +1,6 @@
+id,zone,earliest_start,latest_end,duration_min,required_type,min_capacity,priority
+B1,Brampton,08:00,10:00,60,truck,4000,1
+B2,Brampton,08:00,09:00,30,van,500,1
+B3,Brampton,10:30,11:00,45,van,500,1
+B4,Brampton,08:00,12:00,30,van,9999,2
+B5,Brampton,12:00,13:00,30,van,500,3

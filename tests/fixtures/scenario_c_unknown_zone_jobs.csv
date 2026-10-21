@@ -1,0 +1,2 @@
+id,zone,earliest_start,latest_end,duration_min,required_type,min_capacity,priority
+UZ1,Hamilton,08:00,10:00,30,van,100,1
