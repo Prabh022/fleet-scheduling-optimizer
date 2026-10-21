@@ -1,0 +1,13 @@
+id,type,capacity,shift_start,shift_end,home_zone
+V01,van,1500,06:00,14:00,Brampton
+V02,van,1500,06:00,14:00,Mississauga
+V03,van,1200,07:00,15:00,Toronto
+V04,van,1800,08:00,16:00,Etobicoke
+V05,truck,5000,06:00,14:00,Brampton
+V06,truck,4500,06:00,14:00,Vaughan
+V07,truck,5000,07:00,15:00,Mississauga
+V08,truck,3500,08:00,16:00,Toronto
+V09,car,400,07:00,15:00,Toronto
+V10,car,400,07:00,15:00,Mississauga
+V11,car,300,08:00,16:00,Brampton
+V12,van,1200,09:00,17:00,Vaughan
