@@ -1,0 +1,10 @@
+# Build outputs
+*.o
+*.obj
+fleet_optimizer
+fleet_optimizer.exe
+*.exe
+
+# Editor / OS noise
+*.swp
+.DS_Store
