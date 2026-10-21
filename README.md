@@ -64,6 +64,36 @@ g++ -std=c++17 -Wall -Wextra -O2 -o fleet_optimizer \
 ./fleet_optimizer myvehicles.csv myjobs.csv   # or your own files
 ```
 
+## Tests
+
+An automated test suite lives in `tests/`. It builds the program with the
+exact command above and checks three scenarios:
+
+- **Sample day** — the bundled data must still produce 32 of 35 jobs
+  assigned (J29, J30, and J35 unassigned, each for the documented reason;
+  550 minutes of total travel), and every printed schedule must satisfy
+  the scheduling invariants, verified by re-simulating each route:
+  no overlapping jobs (driving time included), every job inside its
+  time window and its vehicle's shift, vehicle type and capacity
+  respected, and every job accounted for exactly once.
+- **Hand-checked fixture** — a tiny 2-vehicle, 5-job day in
+  `tests/fixtures/` whose correct schedule is computable by hand,
+  including one job with an impossible time window and one no vehicle
+  is big enough for.
+- **Edge cases** — an empty jobs file, a job in a zone missing from the
+  travel-time table (the documented 30-minute fallback applies), and
+  malformed input files, which must be rejected with an error message
+  and a non-zero exit code instead of a crash.
+
+Run it with:
+
+```sh
+python3 tests/run_tests.py
+```
+
+It prints one PASS/FAIL line per check and exits non-zero if anything
+fails. Requirements: `g++` and Python 3 (standard library only).
+
 ## Input formats
 
 `data/vehicles.csv` — one vehicle per row:
@@ -135,6 +165,8 @@ Job.h/.cpp        Job record (zone, time window, duration, requirements)
 Scheduler.h/.cpp  Travel-time table, route simulation, insertion + relocation
 DataLoader.h/.cpp CSV parsing and HH:MM time conversion
 data/             Sample input files (fictional, synthetic)
+tests/            Automated test suite (run_tests.py + CSV fixtures)
+CHANGES.md        Record of bug fixes and notable changes
 ```
 
 ## Possible extensions

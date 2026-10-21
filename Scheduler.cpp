@@ -60,6 +60,7 @@ bool Scheduler::simulate(const Vehicle& vehicle, const std::vector<Job>& route,
 
 int Scheduler::travelMinutes(const Vehicle& vehicle,
                              const std::vector<Job>& route) const {
+    if (route.empty()) return 0;  // a vehicle with no jobs never leaves home
     int total = 0;
     std::string zone = vehicle.homeZone;
     for (const auto& job : route) {
