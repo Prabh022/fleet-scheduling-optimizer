@@ -2,7 +2,7 @@
 """Automated test suite for the Fleet Scheduling Optimizer.
 
 Builds the program with the exact g++ command from the README, then runs
-three scenarios and checks the printed output:
+four scenarios and checks the printed output:
 
   A. Bundled sample data (data/vehicles.csv + data/jobs.csv): the known
      result (32 of 35 assigned; J29/J30/J35 unassigned with their reasons;
@@ -13,6 +13,10 @@ three scenarios and checks the printed output:
   C. Edge cases: an empty jobs file, a job in a zone missing from the
      travel-time table (documented 30-minute fallback), and malformed
      input files, which must be rejected with an error and exit code 1.
+  D. CSV export: with an optional third argument (output path), the
+     written schedule file's rows must match the hand-checked Scenario B
+     schedule exactly; an unwritable output path must exit 1 with an
+     error instead of crashing.
 
 Invariants checked independently of any expected numbers (scenarios A, B
 and C2), by re-simulating every printed route from the CSV inputs:
@@ -529,6 +533,58 @@ def scenario_c(binary):
     )
 
 
+def scenario_d(binary):
+    print("\n--- Scenario D: CSV schedule export ---")
+    vehicles_path = FIXTURES / "scenario_b_vehicles.csv"
+    jobs_path = FIXTURES / "scenario_b_jobs.csv"
+    with tempfile.TemporaryDirectory() as tmp:
+        out_path = Path(tmp) / "schedule.csv"
+        result = subprocess.run(
+            [str(binary), str(vehicles_path), str(jobs_path), str(out_path)],
+            capture_output=True,
+            text=True,
+        )
+        check("D: export run exits 0", result.returncode == 0)
+        check(
+            "D: console notes the written file",
+            f"Schedule written to: {out_path}" in result.stdout,
+        )
+        rows = []
+        if out_path.exists():
+            with open(out_path, newline="") as fh:
+                rows = list(csv.reader(fh))
+        check(
+            "D: first row is the CSV header",
+            bool(rows)
+            and rows[0]
+            == ["vehicle_id", "job_id", "zone", "start", "end", "priority"],
+            f"got {rows[0] if rows else 'no file'}",
+        )
+        check(
+            "D: rows match the hand-checked Scenario B schedule",
+            rows[1:]
+            == [
+                ["T1", "B1", "Brampton", "08:10", "09:10", "1"],
+                ["V1", "B2", "Brampton", "08:10", "08:40", "1"],
+                ["V1", "B5", "Brampton", "12:00", "12:30", "3"],
+            ],
+            f"got {rows[1:]}",
+        )
+
+        bad_path = Path(tmp) / "no_such_dir" / "schedule.csv"
+        result = subprocess.run(
+            [str(binary), str(vehicles_path), str(jobs_path), str(bad_path)],
+            capture_output=True,
+            text=True,
+        )
+        check(
+            "D: unwritable output path exits 1 with a clear error",
+            result.returncode == 1
+            and "could not write schedule file" in result.stderr,
+            f"exit={result.returncode}, stderr={result.stderr.strip()!r}",
+        )
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -567,6 +623,7 @@ def main():
         scenario_a(binary)
         scenario_b(binary)
         scenario_c(binary)
+        scenario_d(binary)
     return summarize()
 
 
