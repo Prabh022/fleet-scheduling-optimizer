@@ -24,6 +24,9 @@ resemblance to a real business is coincidental.
   and shift utilization
 - Prints every unassigned job with the reason (wrong vehicle type,
   insufficient capacity, impossible time window, or no feasible slot)
+- Can also write the finished schedule to a CSV file (one row per
+  assigned job: vehicle, job, zone, start, end, priority) for
+  spreadsheets or other tools
 - No external dependencies — standard C++17 only
 
 ## How the algorithm works
@@ -62,12 +65,13 @@ g++ -std=c++17 -Wall -Wextra -O2 -o fleet_optimizer \
 ```sh
 ./fleet_optimizer                      # uses data/vehicles.csv and data/jobs.csv
 ./fleet_optimizer myvehicles.csv myjobs.csv   # or your own files
+./fleet_optimizer myvehicles.csv myjobs.csv schedule.csv   # also export the schedule as CSV
 ```
 
 ## Tests
 
 An automated test suite lives in `tests/`. It builds the program with the
-exact command above and checks three scenarios:
+exact command above and checks four scenarios:
 
 - **Sample day** — the bundled data must still produce 32 of 35 jobs
   assigned (J29, J30, and J35 unassigned, each for the documented reason;
@@ -84,6 +88,9 @@ exact command above and checks three scenarios:
   travel-time table (the documented 30-minute fallback applies), and
   malformed input files, which must be rejected with an error message
   and a non-zero exit code instead of a crash.
+- **CSV export** — with an output-path argument, the written file's
+  rows must match the hand-checked fixture's schedule exactly, and an
+  unwritable output path must fail with an error and exit code 1.
 
 Run it with:
 

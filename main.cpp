@@ -4,10 +4,13 @@
 // of vehicles. Sample company and data are fictional and ship with the
 // project so it runs out of the box:
 //
-//   ./fleet_optimizer [vehicles.csv] [jobs.csv]
+//   ./fleet_optimizer [vehicles.csv] [jobs.csv] [schedule.csv]
 //
-// With no arguments it reads data/vehicles.csv and data/jobs.csv.
+// With no arguments it reads data/vehicles.csv and data/jobs.csv. An
+// optional third argument writes the finished schedule to a CSV file
+// (one row per assigned job).
 
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -44,11 +47,29 @@ void printVehiclePlan(const Scheduler& scheduler, const Vehicle& vehicle) {
               << ") | Utilization: " << utilization << "%\n\n";
 }
 
+// Writes the finished schedule as CSV: one row per assigned job, in
+// fleet order and, within a vehicle, in route order. Returns false if
+// the file cannot be opened or written.
+bool writeScheduleCsv(const std::string& path, const Scheduler& scheduler) {
+    std::ofstream out(path);
+    if (!out) return false;
+    out << "vehicle_id,job_id,zone,start,end,priority\n";
+    for (const auto& vehicle : scheduler.fleet()) {
+        for (const auto& entry : scheduler.routeFor(vehicle.id)) {
+            out << vehicle.id << ',' << entry.job.id << ',' << entry.job.zone
+                << ',' << formatTime(entry.start) << ',' << formatTime(entry.end)
+                << ',' << entry.job.priority << '\n';
+        }
+    }
+    return static_cast<bool>(out);
+}
+
 }  // namespace
 
 int main(int argc, char* argv[]) {
     const std::string vehiclesPath = argc > 1 ? argv[1] : "data/vehicles.csv";
     const std::string jobsPath = argc > 2 ? argv[2] : "data/jobs.csv";
+    const std::string schedulePath = argc > 3 ? argv[3] : "";
 
     std::vector<Vehicle> vehicles;
     std::vector<Job> jobs;
@@ -98,5 +119,14 @@ int main(int argc, char* argv[]) {
     std::cout << "Jobs assigned: " << assignedCount << " of " << jobs.size()
               << " (" << scheduler.unassigned().size() << " unassigned)\n";
     std::cout << "Total fleet travel time: " << totalTravel << " minutes\n";
+
+    if (!schedulePath.empty()) {
+        if (!writeScheduleCsv(schedulePath, scheduler)) {
+            std::cerr << "Error: could not write schedule file: " << schedulePath
+                      << '\n';
+            return 1;
+        }
+        std::cout << "Schedule written to: " << schedulePath << '\n';
+    }
     return 0;
 }
