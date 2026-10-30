@@ -1,5 +1,18 @@
 # Changes
 
+## Scenario E tests for priority ordering — October 30, 2026
+
+- Added `scenario_e` to the test suite (`tests/run_tests.py`, plus new
+  fixtures `tests/fixtures/scenario_e_vehicles.csv` and
+  `scenario_e_jobs.csv`): one van, three jobs, with the lower-priority
+  job (E1) listed first in the file. The suite checks that the
+  higher-priority job (E2) takes the contested morning slot
+  (08:10–09:10), E1 is left unassigned with the "no feasible time
+  slot" reason, and the later non-conflicting job (E3) is still
+  scheduled (13:00–13:30) — summary 2 of 3 assigned, 30 minutes of
+  travel. The suite is now 65 checks, all passing. README updated
+  (five scenarios). No production code changed.
+
 ## CSV schedule export — October 22, 2026
 
 - The program now accepts an optional third argument: a path to write

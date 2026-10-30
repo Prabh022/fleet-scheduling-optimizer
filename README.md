@@ -71,7 +71,7 @@ g++ -std=c++17 -Wall -Wextra -O2 -o fleet_optimizer \
 ## Tests
 
 An automated test suite lives in `tests/`. It builds the program with the
-exact command above and checks four scenarios:
+exact command above and checks five scenarios:
 
 - **Sample day** — the bundled data must still produce 32 of 35 jobs
   assigned (J29, J30, and J35 unassigned, each for the documented reason;
@@ -91,6 +91,9 @@ exact command above and checks four scenarios:
 - **CSV export** — with an output-path argument, the written file's
   rows must match the hand-checked fixture's schedule exactly, and an
   unwritable output path must fail with an error and exit code 1.
+- **Priority ordering** — a lower-priority job listed first in the
+  file loses its slot to a higher-priority job that conflicts with it,
+  while a later non-conflicting job is still scheduled.
 
 Run it with:
 
