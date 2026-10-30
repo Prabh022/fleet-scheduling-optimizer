@@ -2,7 +2,7 @@
 """Automated test suite for the Fleet Scheduling Optimizer.
 
 Builds the program with the exact g++ command from the README, then runs
-four scenarios and checks the printed output:
+five scenarios and checks the printed output:
 
   A. Bundled sample data (data/vehicles.csv + data/jobs.csv): the known
      result (32 of 35 assigned; J29/J30/J35 unassigned with their reasons;
@@ -17,6 +17,9 @@ four scenarios and checks the printed output:
      written schedule file's rows must match the hand-checked Scenario B
      schedule exactly; an unwritable output path must exit 1 with an
      error instead of crashing.
+  E. Priority ordering: a lower-priority job listed first in the file
+     must lose its slot to a higher-priority job that conflicts with
+     it, while a later non-conflicting job is still scheduled.
 
 Invariants checked independently of any expected numbers (scenarios A, B
 and C2), by re-simulating every printed route from the CSV inputs:
@@ -585,6 +588,54 @@ def scenario_d(binary):
         )
 
 
+def scenario_e(binary):
+    print("\\n--- Scenario E: priority ordering (1 vehicle, 3 jobs) ---")
+    vehicles_path = FIXTURES / "scenario_e_vehicles.csv"
+    jobs_path = FIXTURES / "scenario_e_jobs.csv"
+    vehicles = load_vehicles(vehicles_path)
+    jobs = load_jobs(jobs_path)
+    result = subprocess.run(
+        [str(binary), str(vehicles_path), str(jobs_path)],
+        capture_output=True,
+        text=True,
+    )
+    check("E: program exits 0", result.returncode == 0)
+    parsed = parse_output(result.stdout)
+    check("E: header reports 1 vehicle and 3 jobs", parsed.get("loaded") == (1, 3))
+    # E2 (priority 1) is scheduled before E1 (priority 2) even though E1
+    # is listed first in the file: E2 takes 08:10-09:10, and E1's 120
+    # minutes then fit neither after E2 (09:20-11:20 past its 10:30 end)
+    # nor before it (E2 would end 11:20 past its 10:00 end). The
+    # relocation pass cannot save E1 either: swapping E1 in still leaves
+    # E2 with no feasible slot.
+    check(
+        "E: van V1 gets E2 08:10-09:10 then E3 13:00-13:30",
+        route_of(parsed, "V1")
+        == [
+            ("E2", to_min("08:10"), to_min("09:10")),
+            ("E3", to_min("13:00"), to_min("13:30")),
+        ],
+        f"got {route_of(parsed, 'V1')}",
+    )
+    check(
+        "E: unassigned job is exactly E1, the lower-priority job",
+        set(parsed["unassigned"]) == {"E1"},
+        "got " + ", ".join(sorted(parsed["unassigned"])),
+    )
+    check(
+        "E: E1 reason is no feasible time slot",
+        "no feasible time slot"
+        in parsed["unassigned"].get("E1", {}).get("reason", ""),
+    )
+    check(
+        "E: summary is 2 of 3 assigned, 30 minutes of travel",
+        parsed["summary"].get("assigned") == 2
+        and parsed["summary"].get("total") == 3
+        and parsed["summary"].get("travel") == 30,
+    )
+    check_run_invariants("E", vehicles, jobs, parsed)
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -624,6 +675,7 @@ def main():
         scenario_b(binary)
         scenario_c(binary)
         scenario_d(binary)
+        scenario_e(binary)
     return summarize()
 
 
