@@ -1,0 +1,4 @@
+id,zone,earliest_start,latest_end,duration_min,required_type,min_capacity,priority
+E1,Brampton,08:00,10:30,120,van,500,2
+E2,Brampton,08:00,10:00,60,van,500,1
+E3,Brampton,13:00,14:00,30,van,500,3
